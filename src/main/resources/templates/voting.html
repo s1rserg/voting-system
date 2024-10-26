@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>myVote</title>
+    <link rel="stylesheet" th:href="@{/styles/main.css}">
+    <link rel="stylesheet" th:href="@{/styles/voting.css}">
+    <link rel="stylesheet" th:href="@{/styles/animations.css}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt&display=swap">
+</head>
+<body>
+<header class="header">
+    <h1>
+        <a th:href="@{/votings}">my<span class="distinct">V</span>ote</a>
+    </h1>
+    <div class="header__right">
+        <a th:href="@{/votings/create}"><button class="green_button">Create vote</button></a>
+        <p class="username">
+            User
+        </p>
+    </div>
+</header>
+<div class="container">
+    <section class="votings_container">
+        <div class="voting_container">
+            <div class="voting_header">
+                <div class="voting_header_part">
+                    <p class="voting_number">No. <span th:text="${voting.id}">1</span></p>
+                    <div th:if="${voting.active == false}">
+                        <p class="voting_closed">Closed</p>
+                    </div>
+                </div>
+                <h2 class="voting_title" th:text="${voting.title}">Title</h2>
+                <div class="voting_info_container">
+                    <p class="voting_creator">Author: <span th:text="${voting.creatorUserId}">Author</span></p>
+                    <p class="voting_creator">Total votes: <span th:text="${voting.userVotes.size()}">0</span></p>
+                </div>
+            </div>
+            <div class="voting_body">
+                <p class="voting_description" th:text="${voting.description}">Description</p>
+                <form th:action="@{/votings/{id}/vote(id=${voting.id})}" method="post" id="vote-form">
+                    <div class="poll_container">
+                        <div th:each="candidate, index : ${voting.candidates}">
+                            <p class="option_text">
+                                <input type="radio"
+                                       name="candidateId"
+                                       th:id="${'answer' + index}"
+                                       th:value="${candidate.id}"
+                                       th:checked="${vote != null and candidate.id == vote}"
+                                       th:disabled="${vote != null || voting.active == false}" />
+                                <label th:for="${'answer' + index}" th:text="${candidate.name}"></label>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="vote_button_container">
+                        <button type="submit" class="green_button" id="vote-button" th:disabled="${vote != null || voting.active == false}">Vote</button>
+                    </div>
+                </form>
+            </div>
+            <div class="bottom_buttons_container">
+                <a th:href="@{/votings/{id}(id=${voting.id})}" id="myLink"></a>
+                <img th:src="@{/images/link.png}" id="copyLinkButton" class="bottom_icon" alt="link">
+                <th:block th:if="${voting.active == true}">
+                    <img th:src="@{/images/lock.png}" id="close-voting-button" class="bottom_icon" alt="lock">
+                </th:block>
+                <th:block th:if="${voting.active == false}">
+                    <img th:src="@{/images/unlock.png}" id="open-voting-button" class="bottom_icon" alt="unlock">
+                </th:block>
+                <th:block>
+                    <a th:href="@{/votings/{id}/results(id=${voting.id})}" class="bottom_link">Results</a>
+                </th:block>
+            </div>
+        </div>
+    </section>
+</div>
+<script>
+
+    const copyLinkButton = document.getElementById('copyLinkButton');
+    const myLink = document.getElementById('myLink');
+
+    copyLinkButton.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(myLink.href);
+            showPopup('Link copied to clipboard!');
+        } catch (err) {
+            console.error('Failed to copy link: ', err);
+        }
+    });
+
+
+    const form = document.getElementById("vote-form");
+    form.addEventListener("submit", async (event) => {
+        const candidateId = document.querySelector("input:checked").value;
+        event.preventDefault();
+
+        try {
+            const response = await fetch(`${myLink.href}/votes`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ candidateId }),
+            });
+
+            if (response.ok) {
+                showPopup("Vote successfully casted!");
+                location.reload();
+            } else {
+                const errorMessage = await response.text();
+                showPopup(`Error: ${errorMessage}`);
+            }
+        } catch (error) {
+            console.error(error);
+            showPopup("Error: Failed to cast vote");
+        }
+    });
+    function showPopup(message) {
+        alert(message);
+    }
+
+    const openVotingButton = document.getElementById("open-voting-button");
+    if (openVotingButton) {
+        openVotingButton.addEventListener("click", async () => {
+            try {
+                const response = await fetch(`${myLink.href}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        "active": true
+                    })
+                });
+
+                if (response.ok) {
+                    showPopup("Voting opened successfully");
+                    location.reload();
+                } else {
+                    const errorMessage = await response.text();
+                    showPopup(`Error: ${errorMessage}`);
+                }
+            } catch (error) {
+                console.error(error);
+                showPopup("Error: Failed to open voting");
+            }
+        });
+    }
+
+    const closeVotingButton = document.getElementById("close-voting-button");
+    if (closeVotingButton) {
+        closeVotingButton.addEventListener("click", async () => {
+            try {
+                const response = await fetch(`${myLink.href}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        "active": false
+                    })
+                });
+
+                if (response.ok) {
+                    showPopup("Voting closed successfully");
+                    location.reload();
+                } else {
+                    const errorMessage = await response.text();
+                    showPopup(`Error: ${errorMessage}`);
+                }
+            } catch (error) {
+                console.error(error);
+                showPopup("Error: Failed to close voting");
+            }
+        });
+    }
+</script>
+</body>
+</html>
