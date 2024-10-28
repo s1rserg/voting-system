@@ -33,7 +33,7 @@
                             </div>
                         </div>
                         <div class="voting_card_header_part">
-                            <h4 class="voting_card_votes">Votes: <span th:text="${voting.userVotes.size()}">0</span></h4>
+                            <h4 class="voting_card_votes">Votes: <span th:text="${voting.votes.size()}">0</span></h4>
                             <a th:href="@{/votings/{id}(id=${voting.id})}"><button class="green_button">Open</button></a>
                         </div>
                     </div>

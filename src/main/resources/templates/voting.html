@@ -34,7 +34,7 @@
                 <h2 class="voting_title" th:text="${voting.title}">Title</h2>
                 <div class="voting_info_container">
                     <p class="voting_creator">Author: <span th:text="${voting.creatorUserId}">Author</span></p>
-                    <p class="voting_creator">Total votes: <span th:text="${voting.userVotes.size()}">0</span></p>
+                    <p class="voting_creator">Total votes: <span th:text="${voting.votes.size()}">0</span></p>
                 </div>
             </div>
             <div class="voting_body">

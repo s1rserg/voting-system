@@ -1,6 +1,5 @@
 package com.example.votingsystem.controller;
 
-import com.example.votingsystem.model.Candidate;
 import com.example.votingsystem.model.Voting;
 import com.example.votingsystem.service.VotingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,10 +30,7 @@ public class VotingController {
 
     // Show the form to create a new voting
     @GetMapping("/create")
-    public String showCreateVotingForm(Model model) {
-        Voting voting = new Voting();
-        voting.getCandidates().add(new Candidate()); // Add an empty candidate for form input
-        model.addAttribute("voting", voting);
+    public String showCreateVotingForm() {
         return "newpoll";
     }
 
@@ -44,17 +40,10 @@ public class VotingController {
         if (voting.getCandidates().size() < 2) {
             throw new IllegalArgumentException("At least two candidates are required.");
         }
-        Voting newVoting = votingService.createVoting(voting.getTitle(), voting.getDescription(), voting.getCandidates());
+        Long userId = 1L;
+        Voting newVoting = votingService.createVoting(voting.getTitle(), voting.getDescription(), userId, voting.getCandidates());
         Long newVotingId = newVoting.getId();
         return "redirect:/votings/" + newVotingId;
-    }
-
-    // Method to add more candidates dynamically
-    @PostMapping("/addCandidate")
-    public String addCandidate(@ModelAttribute Voting voting, Model model) {
-        voting.getCandidates().add(new Candidate());
-        model.addAttribute("voting", voting);
-        return "newpoll";
     }
 
     // Retrieve a voting by ID
@@ -93,7 +82,7 @@ public class VotingController {
     public String getVotingResults(@PathVariable Long id, Model model) {
         Voting voting = votingService.getVoting(id);
         model.addAttribute("voting", voting);
-        model.addAttribute("results", voting.getResults());
+        model.addAttribute("results", votingService.getResults(voting.getId()));
         return "votingRes";
     }
 

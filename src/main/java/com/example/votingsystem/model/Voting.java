@@ -1,6 +1,7 @@
 package com.example.votingsystem.model;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Voting {
     private Long id;
@@ -8,9 +9,18 @@ public class Voting {
     private String description;
     private boolean active;
     private Long creatorUserId;
-    private List<Candidate> candidates = new ArrayList<>();
-    private Map<Candidate, Integer> results = new HashMap<>();
-    private Map<Long, Long> userVotes = new HashMap<>(); // Tracks each user's vote
+    private List<Candidate> candidates;
+    private List<Vote> votes;
+
+    public Voting(Long id, String title, String description, boolean active, Long creatorUserId, List<Candidate> candidates) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.active = active;
+        this.creatorUserId = creatorUserId;
+        this.candidates = candidates;
+        this.votes = new ArrayList<>();
+    }
 
     public Long getId() {
         return id;
@@ -29,7 +39,7 @@ public class Voting {
     }
 
     public String getDescription() {
-        return title;
+        return description;
     }
 
     public void setDescription(String description) {
@@ -60,19 +70,11 @@ public class Voting {
         this.candidates = candidates;
     }
 
-    public Map<Candidate, Integer> getResults() {
-        return results;
+    public List<Vote> getVotes() {
+        return votes;
     }
 
-    public void setResults(Map<Candidate, Integer> results) {
-        this.results = results;
-    }
-
-    public Map<Long, Long> getUserVotes() {
-        return userVotes;
-    }
-
-    public void setUserVotes(Map<Long, Long> userVotes) {
-        this.userVotes = userVotes;
+    public void setVotes(List<Vote> votes) {
+        this.votes = votes;
     }
 }

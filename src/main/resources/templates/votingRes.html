@@ -29,13 +29,13 @@
                 <h2 class="voting_title" th:text="${voting.title}">Title</h2>
                 <div class="voting_info_container">
                     <p class="voting_creator">Author: <span th:text="${voting.creatorUserId}">Author</span></p>
-                    <p class="voting_creator">Total votes: <span th:text="${voting.userVotes.size()}">0</span></p>
+                    <p class="voting_creator">Total votes: <span th:text="${voting.votes.size()}">0</span></p>
                 </div>
             </div>
             <div class="voting_body">
                 <p class="voting_description" th:text="${voting.description}">Description</p>
                 <div class="poll_container">
-                    <p th:each="candidate : ${voting.candidates}" class="option_text" th:text="${candidate.name + ' - ' + voting.results.get(candidate) + ' votes'}"></p>
+                    <p th:each="candidate : ${voting.candidates}" class="option_text" th:text="${candidate.name + ' - ' + results.get(candidate.id) + ' votes'}"></p>
                 </div>
             </div>
         </div>

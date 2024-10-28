@@ -1,8 +1,9 @@
 package com.example.votingsystem.config;
 
-import com.example.votingsystem.model.Voting;
+import com.example.votingsystem.model.Vote;
 import com.example.votingsystem.repository.VotingRepository;
 import com.example.votingsystem.service.VotingService;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -17,13 +18,13 @@ public class AppConfig {
 
     @Bean
     @Scope("singleton")
-    public VotingService votingService(VotingRepository votingRepository) {
-        return new VotingService(votingRepository);
+    public VotingService votingService(VotingRepository votingRepository, ApplicationContext context) {
+        return new VotingService(votingRepository, context);
     }
 
     @Bean
     @Scope("prototype")
-    public Voting voting() {
-        return new Voting();
+    public Vote vote() {
+        return new Vote();
     }
 }
