@@ -13,8 +13,6 @@ public class VotingRepository {
     private final Map<Long, Voting> votingStorage = new HashMap<>();
 
     public Optional<Voting> findById(Long id) {
-        System.out.println(votingStorage);
-        System.out.println(votingStorage.get(id));
         return Optional.ofNullable(votingStorage.get(id));
     }
 
