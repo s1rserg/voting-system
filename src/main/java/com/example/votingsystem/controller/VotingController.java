@@ -3,94 +3,126 @@ package com.example.votingsystem.controller;
 import com.example.votingsystem.model.Voting;
 import com.example.votingsystem.service.VotingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Controller
 @RequestMapping("/votings")
 public class VotingController {
     private VotingService votingService;
 
-    // Setter Injection for VotingService
     @Autowired
     public void setVotingService(VotingService votingService) {
         this.votingService = votingService;
     }
 
-    // Retrieve all votings
     @GetMapping
-    public String getAllVotings(Model model) {
-        model.addAttribute("votings", votingService.getAllVotings());
-        return "main";
+    public ResponseEntity<String> getAllVotings(Model model) {
+        try {
+            model.addAttribute("votings", votingService.getAllVotings());
+            return ResponseEntity.ok("main");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving votings.");
+        }
     }
 
-    // Show the form to create a new voting
     @GetMapping("/create")
     public String showCreateVotingForm() {
         return "newpoll";
     }
 
-    // Create a new voting
     @PostMapping("/create")
-    public String createVoting(@ModelAttribute Voting voting) {
-        if (voting.getCandidates().size() < 2) {
-            throw new IllegalArgumentException("At least two candidates are required.");
+    public ResponseEntity<String> createVoting(@ModelAttribute Voting voting) {
+        try {
+            if (voting.getCandidates().size() < 2) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("At least two candidates are required.");
+            }
+            Long userId = 1L;
+            Voting newVoting = votingService.createVoting(voting.getTitle(), voting.getDescription(), userId, voting.getCandidates());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("redirect:/votings/" + newVoting.getId());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating voting.");
         }
-        Long userId = 1L;
-        Voting newVoting = votingService.createVoting(voting.getTitle(), voting.getDescription(), userId, voting.getCandidates());
-        Long newVotingId = newVoting.getId();
-        return "redirect:/votings/" + newVotingId;
     }
 
-    // Retrieve a voting by ID
     @GetMapping("/{id}")
-    public String getVoting(@PathVariable Long id, Model model) {
-        Voting voting = votingService.getVoting(id);
-        Long userId = 1L;
+    public ResponseEntity<String> getVoting(@PathVariable Long id, Model model) {
+        try {
+            Voting voting = votingService.getVoting(id);
+            Long userId = 1L;
+            Long vote = votingService.getUserVote(id, userId);
 
-        // Retrieve the vote if the user has already voted
-        Long vote = votingService.getUserVote(id, userId);
-
-        model.addAttribute("voting", voting);
-        model.addAttribute("userId", userId);
-        model.addAttribute("vote", vote); // Add vote to the model (null if no vote)
-        return "voting";
+            model.addAttribute("voting", voting);
+            model.addAttribute("userId", userId);
+            model.addAttribute("vote", vote);
+            return ResponseEntity.ok("voting");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Voting not found.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving voting.");
+        }
     }
 
-    // Update voting status (open/close)
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateVotingStatus(@PathVariable Long id, @RequestBody Map<String, Boolean> request) {
-        boolean active = request.get("active");
-        votingService.updateVotingStatus(id, active);
-        return ResponseEntity.ok().build();
+        try {
+            boolean active = request.get("active");
+            votingService.updateVotingStatus(id, active);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    // Cast a vote
     @PostMapping("/{id}/votes")
     public ResponseEntity<Void> castVote(@PathVariable Long id, @RequestBody Map<String, Long> request) {
-        Long userId = 1L;
-        votingService.castVote(id, request.get("candidateId"), userId);
-        return ResponseEntity.ok().build();
+        try {
+            Long userId = 1L;
+            votingService.castVote(id, request.get("candidateId"), userId);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    // Retrieve results for a specific voting
     @GetMapping("/{id}/results")
-    public String getVotingResults(@PathVariable Long id, Model model) {
-        Voting voting = votingService.getVoting(id);
-        model.addAttribute("voting", voting);
-        model.addAttribute("results", votingService.getResults(voting.getId()));
-        return "votingRes";
+    public ResponseEntity<String> getVotingResults(@PathVariable Long id, Model model) {
+        try {
+            Voting voting = votingService.getVoting(id);
+            model.addAttribute("voting", voting);
+            model.addAttribute("results", votingService.getResults(voting.getId()));
+            return ResponseEntity.ok("votingRes");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Voting not found.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving results.");
+        }
     }
 
-    // Delete a voting
     @DeleteMapping("/{id}")
-    public String deleteVoting(@PathVariable Long id) {
-        Long userId = 1L;
-        votingService.deleteVoting(id, userId);
-        return "redirect:/votings";
+    public ResponseEntity<String> deleteVoting(@PathVariable Long id) {
+        try {
+            Long userId = 1L;
+            votingService.deleteVoting(id, userId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Voting deleted successfully.");
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Voting not found.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting voting.");
+        }
     }
 }
