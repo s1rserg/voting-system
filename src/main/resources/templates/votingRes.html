@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>myVote</title>
+    <link rel="stylesheet" th:href="@{/styles/main.css}">
+    <link rel="stylesheet" th:href="@{/styles/voting.css}">
+    <link rel="stylesheet" th:href="@{/styles/animations.css}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prompt&display=swap">
+</head>
+<body>
+<header class="header">
+    <h1>
+        <a th:href="@{/votings}">my<span class="distinct">V</span>ote</a>
+    </h1>
+    <div class="header__right">
+        <a th:href="@{/votings/create}"><button class="green_button">Create vote</button></a>
+        <p class="username">
+            User
+        </p>
+    </div>
+</header>
+<div class="container">
+    <section class="votings_container">
+        <div class="voting_container">
+            <div class="voting_header">
+                <p class="voting_number">No. <span th:text="${voting.id}">1</span> Results</p>
+                <h2 class="voting_title" th:text="${voting.title}">Title</h2>
+                <div class="voting_info_container">
+                    <p class="voting_creator">Author: <span th:text="${voting.creatorUserId}">Author</span></p>
+                    <p class="voting_creator">Total votes: <span th:text="${voting.votes.size()}">0</span></p>
+                </div>
+            </div>
+            <div class="voting_body">
+                <p class="voting_description" th:text="${voting.description}">Description</p>
+                <div class="poll_container">
+                    <p th:each="candidate : ${voting.candidates}" class="option_text" th:text="${candidate.name + ' - ' + results.get(candidate.id) + ' votes'}"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>
