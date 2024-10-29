@@ -9,14 +9,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class VotingService {
     private final VotingRepository votingRepository;
     private final ApplicationContext context;
-    // Field Injection for NotificationService
-    @Autowired
-    private NotificationService notificationService;
 
     // Constructor Injection for VotingRepository
     @Autowired
@@ -25,8 +23,23 @@ public class VotingService {
         this.context = context;
     }
 
-    public Collection<Voting> getAllVotings() {
-        return votingRepository.findAll();
+    public List<Voting> getAllVotings(String title, int page, int size) {
+        // Filter votings based on title and description
+        List<Voting> filteredVotings = votingRepository.findAll().stream()
+                .filter(v -> (title == null || v.getTitle().contains(title)))
+                .collect(Collectors.toList());
+
+        // Calculate start and end indices for pagination
+        int start = page * size;
+        int end = Math.min(start + size, filteredVotings.size());
+
+        // Handle cases where the page number exceeds the available data
+        if (start >= filteredVotings.size()) {
+            return List.of(); // Return an empty list if the start index is out of range
+        }
+
+        // Return the paginated list
+        return filteredVotings.subList(start, end);
     }
 
     public Voting getVoting(Long votingId) {
@@ -44,14 +57,11 @@ public class VotingService {
                 candidates
         );
 
-        // Purely for example of field injection
-        notificationService.notifyUser(voting.getCreatorUserId(), "New voting created!");
-
         votingRepository.save(voting);
         return voting;
     }
 
-    public void castVote(Long votingId, Long candidateId, Long userId) {
+    public Voting castVote(Long votingId, Long candidateId, Long userId) {
         Voting voting = getVoting(votingId);
 
         if (!voting.isActive()) {
@@ -62,10 +72,12 @@ public class VotingService {
             throw new IllegalStateException("User has already voted in this voting.");
         }
 
-        voting.getCandidates().stream()
+        Candidate candidate = voting.getCandidates().stream()
                 .filter(c -> c.getId().equals(candidateId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+
+        candidate.incrementVotes();
 
         Vote vote = context.getBean(Vote.class); // demonstrating creating bean using prototype
         vote.setId(UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE);
@@ -75,41 +87,23 @@ public class VotingService {
 
         voting.getVotes().add(vote);
         votingRepository.save(voting);
+        return voting;
     }
 
-    public void deleteVoting(Long votingId, Long userId) {
+    public boolean deleteVoting(Long votingId, Long userId) {
         Voting voting = getVoting(votingId);
         if (!voting.getCreatorUserId().equals(userId)) {
             throw new SecurityException("Only the creator can delete this voting.");
         }
         votingRepository.delete(votingId);
+        return true;
     }
 
-    public void updateVotingStatus(Long id, boolean active) {
+    public Voting updateVotingStatus(Long id, boolean active) {
         Voting voting = getVoting(id);
         voting.setActive(active);
         votingRepository.save(voting);
-    }
-
-    public Long getUserVote(Long votingId, Long userId) {
-        Voting voting = getVoting(votingId);
-        return voting.getVotes().stream()
-                .filter(vote -> vote.getUserId().equals(userId))
-                .map(Vote::getCandidateId)
-                .findFirst()
-                .orElse(null);
-    }
-
-    public Map<Long, Integer> getResults(Long votingId) {
-        Voting voting = getVoting(votingId);
-        Map<Long, Integer> resultsMap = new HashMap<>();
-
-        for (Vote vote : voting.getVotes()) {
-            Long candidateId = vote.getCandidateId();
-            resultsMap.put(candidateId, resultsMap.getOrDefault(candidateId, 0) + 1);
-        }
-
-        return resultsMap;
+        return voting;
     }
 
 }
