@@ -27,7 +27,7 @@ public class VotingService {
         // Filter votings based on title and description
         return votingRepository.findAll().stream()
                 .filter(v -> title == null || v.getTitle().contains(title))
-                .skip(page * size)
+                .skip((long) page * size)
                 .limit(size)
                 .collect(Collectors.toList());
     }
