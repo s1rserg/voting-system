@@ -25,21 +25,11 @@ public class VotingService {
 
     public List<Voting> getAllVotings(String title, int page, int size) {
         // Filter votings based on title and description
-        List<Voting> filteredVotings = votingRepository.findAll().stream()
-                .filter(v -> (title == null || v.getTitle().contains(title)))
+        return votingRepository.findAll().stream()
+                .filter(v -> title == null || v.getTitle().contains(title))
+                .skip(page * size)
+                .limit(size)
                 .collect(Collectors.toList());
-
-        // Calculate start and end indices for pagination
-        int start = page * size;
-        int end = Math.min(start + size, filteredVotings.size());
-
-        // Handle cases where the page number exceeds the available data
-        if (start >= filteredVotings.size()) {
-            return List.of(); // Return an empty list if the start index is out of range
-        }
-
-        // Return the paginated list
-        return filteredVotings.subList(start, end);
     }
 
     public Voting getVoting(Long votingId) {
