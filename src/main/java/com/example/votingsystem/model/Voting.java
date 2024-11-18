@@ -12,13 +12,13 @@ public class Voting {
     private List<Candidate> candidates;
     private List<Vote> votes;
 
-    public Voting(Long id, String title, String description, boolean active, Long creatorUserId, List<Candidate> candidates) {
+    public Voting(Long id, String title, String description, boolean active, Long creatorUserId) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.active = active;
         this.creatorUserId = creatorUserId;
-        this.candidates = candidates;
+        this.candidates = new ArrayList<>();
         this.votes = new ArrayList<>();
     }
 
@@ -62,19 +62,19 @@ public class Voting {
         this.creatorUserId = creatorUserId;
     }
 
-    public List<Candidate> getCandidates() {
-        return candidates;
-    }
-
     public void setCandidates(List<Candidate> candidates) {
         this.candidates = candidates;
     }
 
-    public List<Vote> getVotes() {
-        return votes;
-    }
-
     public void setVotes(List<Vote> votes) {
         this.votes = votes;
+    }
+
+    public List<Candidate> getCandidates() {
+        return candidates;
+    }
+
+    public List<Vote> getVotes() {
+        return votes;
     }
 }

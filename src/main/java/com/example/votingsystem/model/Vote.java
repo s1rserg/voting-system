@@ -6,6 +6,13 @@ public class Vote {
     private Long candidateId;
     private Long userId;
 
+    public Vote(Long id, Long votingId, Long candidateId, Long userId) {
+        this.id = id;
+        this.votingId = votingId;
+        this.candidateId = candidateId;
+        this.userId = userId;
+    }
+
     public Long getId() {
         return id;
     }
