@@ -55,8 +55,8 @@ public class VoteDAOImpl implements VoteDAO {
     }
 
     @Override
-    public void deleteByVotingAndUserId(Long votingId, Long userId) {
-        String sql = "DELETE FROM vote WHERE voting_id = ? AND id = ?";
-        jdbcTemplate.update(sql, votingId, userId);
+    public void deleteById(Long id) {
+        String sql = "DELETE FROM vote WHERE id = ?";
+        jdbcTemplate.update(sql, id);
     }
 }

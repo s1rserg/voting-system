@@ -49,7 +49,7 @@ public class VoteServiceImpl implements VoteService {
     @Transactional
     public boolean retract(Long votingId, Long userId) {
         Vote vote = voteDAO.getByVotingAndUserId(votingId, userId).orElseThrow(() -> new IllegalArgumentException("No vote found for the given user in this voting"));
-        voteDAO.deleteByVotingAndUserId(vote.getId(), userId);
+        voteDAO.deleteById(vote.getId());
         candidateService.decrementVotes(vote.getCandidateId());
         return true;
     }

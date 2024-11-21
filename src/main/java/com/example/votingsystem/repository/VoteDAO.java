@@ -11,5 +11,5 @@ public interface VoteDAO {
     List<Vote> getByVotingId(Long votingId);
     Optional<Vote> getByVotingAndUserId(Long votingId, Long userId);
     Vote update(Vote vote);
-    void deleteByVotingAndUserId(Long votingId, Long userId);
+    void deleteById(Long id);
 }
