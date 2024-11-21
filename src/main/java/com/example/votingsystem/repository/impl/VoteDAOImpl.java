@@ -1,6 +1,6 @@
 package com.example.votingsystem.repository.impl;
 
-import com.example.votingsystem.model.Vote;
+import com.example.votingsystem.model.VoteDTO;
 import com.example.votingsystem.repository.VoteDAO;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -16,7 +16,7 @@ public class VoteDAOImpl implements VoteDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<Vote> voteRowMapper = (rs, rowNum) -> new Vote(
+    private final RowMapper<VoteDTO> voteRowMapper = (rs, rowNum) -> new VoteDTO(
             rs.getLong("id"),
             rs.getLong("voting_id"),
             rs.getLong("candidate_id"),
@@ -30,25 +30,25 @@ public class VoteDAOImpl implements VoteDAO {
     }
 
     @Override
-    public Optional<Vote> getById(Long id) {
+    public Optional<VoteDTO> getById(Long id) {
         String sql = "SELECT * FROM vote WHERE id = ?";
         return jdbcTemplate.query(sql, voteRowMapper, id).stream().findFirst();
     }
 
     @Override
-    public List<Vote> getByVotingId(Long votingId) {
+    public List<VoteDTO> getByVotingId(Long votingId) {
         String sql = "SELECT * FROM vote WHERE voting_id = ?";
         return jdbcTemplate.query(sql, voteRowMapper, votingId);
     }
 
     @Override
-    public Optional<Vote> getByVotingAndUserId(Long votingId, Long userId) {
+    public Optional<VoteDTO> getByVotingAndUserId(Long votingId, Long userId) {
         String sql = "SELECT * FROM vote WHERE voting_id = ? AND user_id = ?";
         return jdbcTemplate.query(sql, voteRowMapper, votingId, userId).stream().findFirst();
     }
 
     @Override
-    public Vote update(Vote vote) {
+    public VoteDTO update(VoteDTO vote) {
         String sql = "UPDATE vote SET voting_id = ?, candidate_id = ?, user_id = ? WHERE id = ?";
         jdbcTemplate.update(sql, vote.getVotingId(), vote.getCandidateId(), vote.getUserId(), vote.getId());
         return getById(vote.getId()).orElseThrow(() -> new RuntimeException("Failed to retrieve updated vote record"));

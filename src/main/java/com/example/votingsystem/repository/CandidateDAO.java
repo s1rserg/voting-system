@@ -1,14 +1,14 @@
 package com.example.votingsystem.repository;
 
-import com.example.votingsystem.model.Candidate;
+import com.example.votingsystem.model.CandidateDTO;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface CandidateDAO {
     Long create(String name, int votes, Long votingId);
-    Optional<Candidate> getById(Long id);
-    List<Candidate> getByVotingId(Long votingId);
-    Candidate update(Candidate candidate);
+    Optional<CandidateDTO> getById(Long id);
+    List<CandidateDTO> getByVotingId(Long votingId);
+    CandidateDTO update(CandidateDTO candidate);
     void deleteById(Long id);
 }

@@ -1,6 +1,6 @@
 package com.example.votingsystem.repository.impl;
 
-import com.example.votingsystem.model.Candidate;
+import com.example.votingsystem.model.CandidateDTO;
 import com.example.votingsystem.repository.CandidateDAO;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -16,7 +16,7 @@ public class CandidateDAOImpl implements CandidateDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<Candidate> candidateRowMapper = (rs, rowNum) -> new Candidate(
+    private final RowMapper<CandidateDTO> candidateRowMapper = (rs, rowNum) -> new CandidateDTO(
             rs.getLong("id"),
             rs.getString("name"),
             rs.getInt("votes"),
@@ -30,19 +30,19 @@ public class CandidateDAOImpl implements CandidateDAO {
     }
 
     @Override
-    public Optional<Candidate> getById(Long id) {
+    public Optional<CandidateDTO> getById(Long id) {
         String sql = "SELECT * FROM candidate WHERE id = ?";
         return jdbcTemplate.query(sql, candidateRowMapper, id).stream().findFirst();
     }
 
     @Override
-    public List<Candidate> getByVotingId(Long votingId) {
+    public List<CandidateDTO> getByVotingId(Long votingId) {
         String sql = "SELECT * FROM candidate WHERE voting_id = ?";
         return jdbcTemplate.query(sql, candidateRowMapper, votingId);
     }
 
     @Override
-    public Candidate update(Candidate candidate) {
+    public CandidateDTO update(CandidateDTO candidate) {
         String sql = "UPDATE candidate SET name = ?, votes = ?, voting_id = ? WHERE id = ?";
         jdbcTemplate.update(sql, candidate.getName(), candidate.getVotes(), candidate.getVotingId(), candidate.getId());
         return getById(candidate.getId()).orElseThrow(() -> new RuntimeException("Failed to retrieve updated candidate record"));

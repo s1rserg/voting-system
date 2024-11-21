@@ -1,8 +1,8 @@
 package com.example.votingsystem.service.impl;
 
-import com.example.votingsystem.model.Candidate;
-import com.example.votingsystem.model.Vote;
-import com.example.votingsystem.model.Voting;
+import com.example.votingsystem.model.CandidateDTO;
+import com.example.votingsystem.model.VoteDTO;
+import com.example.votingsystem.model.VotingDTO;
 import com.example.votingsystem.repository.VotingDAO;
 import com.example.votingsystem.service.CandidateService;
 import com.example.votingsystem.service.VoteService;
@@ -25,9 +25,9 @@ public class VotingServiceImpl implements VotingService {
 
     @Override
     @Transactional
-    public Voting create(String title, String description, Long creatorUserId, List<Candidate> candidates) {
+    public VotingDTO create(String title, String description, Long creatorUserId, List<CandidateDTO> candidates) {
         Long votingId = votingDAO.create(title, description, creatorUserId);
-        for (Candidate candidate : candidates) {
+        for (CandidateDTO candidate : candidates) {
             candidate.setVotingId(votingId);
             candidateService.create(candidate);
         }
@@ -36,10 +36,10 @@ public class VotingServiceImpl implements VotingService {
     }
 
     @Override
-    public Voting getById(Long id) {
-        Voting voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
-        List<Candidate> candidates = candidateService.getByVotingId(id);
-        List<Vote> votes = voteService.getByVotingId(id);
+    public VotingDTO getById(Long id) {
+        VotingDTO voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        List<CandidateDTO> candidates = candidateService.getByVotingId(id);
+        List<VoteDTO> votes = voteService.getByVotingId(id);
         voting.setCandidates(candidates);
         voting.setVotes(votes);
 
@@ -47,11 +47,11 @@ public class VotingServiceImpl implements VotingService {
     }
 
     @Override
-    public List<Voting> getAll(String title, int page, int size) {
-        List<Voting> votings = votingDAO.getAll(title, page, size);
-        for (Voting voting : votings) {
-            List<Candidate> candidates = candidateService.getByVotingId(voting.getId());
-            List<Vote> votes = voteService.getByVotingId(voting.getId());
+    public List<VotingDTO> getAll(String title, int page, int size) {
+        List<VotingDTO> votings = votingDAO.getAll(title, page, size);
+        for (VotingDTO voting : votings) {
+            List<CandidateDTO> candidates = candidateService.getByVotingId(voting.getId());
+            List<VoteDTO> votes = voteService.getByVotingId(voting.getId());
 
             voting.setCandidates(candidates);
             voting.setVotes(votes);
@@ -61,8 +61,8 @@ public class VotingServiceImpl implements VotingService {
     }
 
     @Override
-    public Voting updateStatus(Long id, Long userId, boolean active) {
-        Voting voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+    public VotingDTO updateStatus(Long id, Long userId, boolean active) {
+        VotingDTO voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
         if (!voting.getCreatorUserId().equals(userId)) {
             throw new SecurityException("Only the creator can update this voting.");
         }
@@ -72,7 +72,7 @@ public class VotingServiceImpl implements VotingService {
 
     @Override
     public boolean deleteById(Long id, Long userId) {
-        Voting voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        VotingDTO voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
         if (!voting.getCreatorUserId().equals(userId)) {
             throw new SecurityException("Only the creator can delete this voting.");
         }
@@ -82,8 +82,8 @@ public class VotingServiceImpl implements VotingService {
 
     @Override
     @Transactional
-    public Voting castVote(Long votingId, Long candidateId, Long userId) {
-        Voting voting = votingDAO.getById(votingId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+    public VotingDTO castVote(Long votingId, Long candidateId, Long userId) {
+        VotingDTO voting = votingDAO.getById(votingId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
         if (!voting.isActive()) {
             throw new IllegalStateException("Voting is closed. You cannot cast a vote.");
         }
@@ -91,7 +91,7 @@ public class VotingServiceImpl implements VotingService {
         if (voteService.getByVotingId(votingId).stream().anyMatch(vote -> vote.getUserId().equals(userId))) {
             throw new IllegalStateException("User has already voted in this voting.");
         }
-        Candidate candidate = candidateService.getById(candidateId).orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+        CandidateDTO candidate = candidateService.getById(candidateId).orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
         if (!candidate.getVotingId().equals(votingId)) {
             throw new IllegalStateException("There is no such candidate in this voting.");
         }
@@ -102,8 +102,8 @@ public class VotingServiceImpl implements VotingService {
 
     @Override
     @Transactional
-    public Voting updateVote(Long votingId, Long candidateId, Long userId) {
-        Voting voting = votingDAO.getById(votingId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+    public VotingDTO updateVote(Long votingId, Long candidateId, Long userId) {
+        VotingDTO voting = votingDAO.getById(votingId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
         if (!voting.isActive()) {
             throw new IllegalStateException("Voting is closed. You cannot update a vote.");
         }
@@ -112,7 +112,7 @@ public class VotingServiceImpl implements VotingService {
             throw new IllegalStateException("You did not vote in this voting.");
         }
 
-        Candidate candidate = candidateService.getById(candidateId).orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
+        CandidateDTO candidate = candidateService.getById(candidateId).orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
 
         if (!candidate.getVotingId().equals(votingId)) {
             throw new IllegalStateException("There is no such candidate in this voting.");

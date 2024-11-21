@@ -1,7 +1,7 @@
 package com.example.votingsystem.controller;
 
-import com.example.votingsystem.model.Vote;
-import com.example.votingsystem.model.Voting;
+import com.example.votingsystem.model.VoteDTO;
+import com.example.votingsystem.model.VotingDTO;
 import com.example.votingsystem.service.VoteService;
 import com.example.votingsystem.service.VotingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,18 +32,18 @@ public class VotingController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        List<Voting> votings = votingService.getAll(title, page, size);
+        List<VotingDTO> votings = votingService.getAll(title, page, size);
         return ResponseEntity.ok(votings);
     }
 
     // Create a new voting
     @PostMapping()
-    public ResponseEntity<?> createVoting(@RequestBody Voting voting) {
+    public ResponseEntity<?> createVoting(@RequestBody VotingDTO voting) {
         if (voting.getCandidates().size() < 2) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("At least two candidates are required.");
         }
         Long userId = 1L;
-        Voting newVoting = votingService.create(voting.getTitle(), voting.getDescription(), userId, voting.getCandidates());
+        VotingDTO newVoting = votingService.create(voting.getTitle(), voting.getDescription(), userId, voting.getCandidates());
         return ResponseEntity.status(HttpStatus.CREATED).body(newVoting);
     }
 
@@ -51,7 +51,7 @@ public class VotingController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getVoting(@PathVariable Long id) {
         try {
-            Voting voting = votingService.getById(id);
+            VotingDTO voting = votingService.getById(id);
             return ResponseEntity.ok(voting);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -64,7 +64,7 @@ public class VotingController {
         Long userId = 1L;
         boolean active = request.getOrDefault("active", false);
         try {
-            Voting voting = votingService.updateStatus(id, userId, active);
+            VotingDTO voting = votingService.updateStatus(id, userId, active);
             return ResponseEntity.ok(voting);
         } catch (SecurityException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
@@ -84,7 +84,7 @@ public class VotingController {
         }
 
         try {
-            Voting voting = votingService.castVote(id, candidateId, userId);
+            VotingDTO voting = votingService.castVote(id, candidateId, userId);
             return ResponseEntity.ok(voting);
         } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -102,7 +102,7 @@ public class VotingController {
         }
 
         try {
-            Voting voting = votingService.updateVote(id, candidateId, userId);
+            VotingDTO voting = votingService.updateVote(id, candidateId, userId);
             return ResponseEntity.ok(voting);
         } catch (IllegalStateException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -126,7 +126,7 @@ public class VotingController {
     @GetMapping("/{id}/votes")
     public ResponseEntity<?> getVotingResults(@PathVariable Long id) {
         try {
-            List<Vote> votes = voteService.getByVotingId(id);
+            List<VoteDTO> votes = voteService.getByVotingId(id);
             return ResponseEntity.ok(votes);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

@@ -1,6 +1,6 @@
 package com.example.votingsystem.repository.impl;
 
-import com.example.votingsystem.model.Voting;
+import com.example.votingsystem.model.VotingDTO;
 import com.example.votingsystem.repository.VotingDAO;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -16,7 +16,7 @@ public class VotingDAOImpl implements VotingDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<Voting> votingRowMapper = (rs, rowNum) -> new Voting(
+    private final RowMapper<VotingDTO> votingRowMapper = (rs, rowNum) -> new VotingDTO(
             rs.getLong("id"),
             rs.getString("title"),
             rs.getString("description"),
@@ -31,13 +31,13 @@ public class VotingDAOImpl implements VotingDAO {
     }
 
     @Override
-    public Optional<Voting> getById(Long id) {
+    public Optional<VotingDTO> getById(Long id) {
         String sql = "SELECT * FROM voting WHERE id = ?";
         return jdbcTemplate.query(sql, votingRowMapper, id).stream().findFirst();
     }
 
     @Override
-    public List<Voting> getAll(String title, int page, int size) {
+    public List<VotingDTO> getAll(String title, int page, int size) {
         StringBuilder sql = new StringBuilder("SELECT * FROM voting");
         if (title != null && !title.isEmpty()) {
             sql.append(" WHERE title LIKE ?");
@@ -53,7 +53,7 @@ public class VotingDAOImpl implements VotingDAO {
     }
 
     @Override
-    public Voting update(Voting voting) {
+    public VotingDTO update(VotingDTO voting) {
         String sql = "UPDATE voting SET title = ?, description = ?, active = ?, creator_user_id = ? WHERE id = ?";
         jdbcTemplate.update(sql, voting.getTitle(), voting.getDescription(), voting.isActive(), voting.getCreatorUserId(), voting.getId());
         return getById(voting.getId()).orElseThrow(() -> new RuntimeException("Failed to retrieve updated voting record"));
