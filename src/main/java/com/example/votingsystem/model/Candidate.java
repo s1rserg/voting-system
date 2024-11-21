@@ -1,14 +1,17 @@
 package com.example.votingsystem.model;
 
-import java.util.UUID;
-
 public class Candidate {
     private Long id;
     private String name;
     private int votes;
+    private Long votingId;
 
-    public Candidate() {
-        this.id = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+    public Candidate(Long id, String name, int votes, Long votingId) {
+        this.id = id;
+        this.name = name;
+        this.votes = votes;
+        this.votingId = votingId;
+
     }
 
     public Long getId() {
@@ -30,4 +33,15 @@ public class Candidate {
     public void incrementVotes() {
         this.votes++;
     }
+
+    public Long getVotingId() {
+        return votingId;
+    }
+
+    public void setVotingId(Long votingId) {
+        this.votingId = votingId;
+    }
+
+    public void decrementVotes() {this.votes--;}
+
 }
