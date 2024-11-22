@@ -6,6 +6,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "voting")
+@NamedQueries({
+        @NamedQuery(name = "Voting.findAllVotings",
+                query = "SELECT v FROM Voting v")
+})
 public class Voting {
 
     @Id

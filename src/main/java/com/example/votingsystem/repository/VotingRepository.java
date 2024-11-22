@@ -13,12 +13,11 @@ import java.util.Optional;
 
 @Repository
 public interface VotingRepository extends CrudRepository<Voting, Long> {
-    @Query("SELECT v FROM Voting v")
-    List<Voting> findAllVotings();
 
     @Query("SELECT v FROM Voting v WHERE LOWER(v.title) LIKE LOWER(CONCAT('%', :title, '%'))")
     Page<Voting> findAllByTitleContaining(@Param("title") String title, Pageable pageable);
 
-    @Query("SELECT v FROM Voting v")
+    // Using NamedQuery
+    @Query(name = "Voting.findAllVotings")
     List<Voting> findAllVotings(Pageable pageable);
 }

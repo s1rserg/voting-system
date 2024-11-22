@@ -11,8 +11,8 @@ import java.util.Optional;
 
 @Repository
 public interface VoteRepository extends CrudRepository<Vote, Long> {
-    @Query("SELECT v FROM Vote v WHERE v.voting.id = :votingId")
-    List<Vote> findByVotingId(@Param("votingId") Long votingId);
+    // Use of automatically generated method
+    List<Vote> findByVotingId(Long votingId);
 
     @Query("SELECT v FROM Vote v WHERE v.voting.id = :votingId AND v.userId = :userId")
     Optional<Vote> findByVotingAndUserId(@Param("votingId") Long votingId, @Param("userId") Long userId);
