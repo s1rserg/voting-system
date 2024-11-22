@@ -1,24 +1,32 @@
 package com.example.votingsystem.service.impl;
 
 import com.example.votingsystem.model.CandidateDTO;
-import com.example.votingsystem.model.VoteDTO;
 import com.example.votingsystem.model.VotingDTO;
-import com.example.votingsystem.repository.VotingDAO;
+import com.example.votingsystem.model.entities.Voting;
+import com.example.votingsystem.model.entities.Candidate;
+import com.example.votingsystem.model.mappers.VotingMapper;
+import com.example.votingsystem.repository.VotingRepository;
 import com.example.votingsystem.service.CandidateService;
 import com.example.votingsystem.service.VoteService;
 import com.example.votingsystem.service.VotingService;
+import io.micrometer.common.util.StringUtils;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class VotingServiceImpl implements VotingService {
-    private final VotingDAO votingDAO;
+    private final VotingRepository votingRepository;
     private final CandidateService candidateService;
     private final VoteService voteService;
 
-    public VotingServiceImpl(VotingDAO votingDAO, CandidateService candidateService, VoteService voteService) {
-        this.votingDAO = votingDAO;
+    public VotingServiceImpl(VotingRepository votingRepository,
+                             CandidateService candidateService,
+                             VoteService voteService) {
+        this.votingRepository = votingRepository;
         this.candidateService = candidateService;
         this.voteService = voteService;
     }
@@ -26,100 +34,109 @@ public class VotingServiceImpl implements VotingService {
     @Override
     @Transactional
     public VotingDTO create(String title, String description, Long creatorUserId, List<CandidateDTO> candidates) {
-        Long votingId = votingDAO.create(title, description, creatorUserId);
+        Voting voting = new Voting(title, description, true, creatorUserId);
+
         for (CandidateDTO candidate : candidates) {
-            candidate.setVotingId(votingId);
-            candidateService.create(candidate);
+            voting.getCandidates().add(new Candidate(candidate.getName(), 0, voting));
         }
 
-        return getById(votingId);
+        votingRepository.save(voting);
+
+        return VotingMapper.toDto(voting);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public VotingDTO getById(Long id) {
-        VotingDTO voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
-        List<CandidateDTO> candidates = candidateService.getByVotingId(id);
-        List<VoteDTO> votes = voteService.getByVotingId(id);
-        voting.setCandidates(candidates);
-        voting.setVotes(votes);
-
-        return voting;
+        Voting voting = votingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        return VotingMapper.toDto(voting);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<VotingDTO> getAll(String title, int page, int size) {
-        List<VotingDTO> votings = votingDAO.getAll(title, page, size);
-        for (VotingDTO voting : votings) {
-            List<CandidateDTO> candidates = candidateService.getByVotingId(voting.getId());
-            List<VoteDTO> votes = voteService.getByVotingId(voting.getId());
+        PageRequest pageRequest = PageRequest.of(page, size);
 
-            voting.setCandidates(candidates);
-            voting.setVotes(votes);
+        if (StringUtils.isBlank(title)) {
+
+            List<Voting> votings = votingRepository.findAllVotings(pageRequest);
+
+            List<VotingDTO> dtos = votings.stream()
+                    .map(VotingMapper::toDto)
+                    .collect(Collectors.toList());
+
+            return dtos;
         }
 
-        return votings;
+        return votingRepository.findAllByTitleContaining(title, pageRequest)
+                .stream()
+                .map(VotingMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
+    @Transactional
     public VotingDTO updateStatus(Long id, Long userId, boolean active) {
-        VotingDTO voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        Voting voting = votingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+
         if (!voting.getCreatorUserId().equals(userId)) {
             throw new SecurityException("Only the creator can update this voting.");
         }
+
         voting.setActive(active);
-        return votingDAO.update(voting);
+        votingRepository.save(voting);
+        return VotingMapper.toDto(voting);
     }
 
     @Override
+    @Transactional
     public boolean deleteById(Long id, Long userId) {
-        VotingDTO voting = votingDAO.getById(id).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        Voting voting = votingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+
         if (!voting.getCreatorUserId().equals(userId)) {
             throw new SecurityException("Only the creator can delete this voting.");
         }
-        votingDAO.delete(id);
+
+        votingRepository.delete(voting);
         return true;
     }
 
     @Override
     @Transactional
     public VotingDTO castVote(Long votingId, Long candidateId, Long userId) {
-        VotingDTO voting = votingDAO.getById(votingId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        Voting voting = votingRepository.findById(votingId)
+                .orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+
         if (!voting.isActive()) {
             throw new IllegalStateException("Voting is closed. You cannot cast a vote.");
         }
 
-        if (voteService.getByVotingId(votingId).stream().anyMatch(vote -> vote.getUserId().equals(userId))) {
+        if (voteService.getByVotingId(votingId).stream()
+                .anyMatch(vote -> vote.getUserId().equals(userId))) {
             throw new IllegalStateException("User has already voted in this voting.");
         }
-        CandidateDTO candidate = candidateService.getById(candidateId).orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
-        if (!candidate.getVotingId().equals(votingId)) {
-            throw new IllegalStateException("There is no such candidate in this voting.");
-        }
+
         voteService.create(votingId, candidateId, userId);
         candidateService.incrementVotes(candidateId);
-        return getById(votingId);
+
+        return VotingMapper.toDto(voting);
     }
 
     @Override
     @Transactional
     public VotingDTO updateVote(Long votingId, Long candidateId, Long userId) {
-        VotingDTO voting = votingDAO.getById(votingId).orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+        Voting voting = votingRepository.findById(votingId)
+                .orElseThrow(() -> new IllegalArgumentException("Voting not found"));
+
         if (!voting.isActive()) {
             throw new IllegalStateException("Voting is closed. You cannot update a vote.");
         }
 
-        if (voteService.getByVotingId(votingId).stream().noneMatch(vote -> vote.getUserId().equals(userId))) {
-            throw new IllegalStateException("You did not vote in this voting.");
-        }
-
-        CandidateDTO candidate = candidateService.getById(candidateId).orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
-
-        if (!candidate.getVotingId().equals(votingId)) {
-            throw new IllegalStateException("There is no such candidate in this voting.");
-        }
-
         voteService.update(votingId, candidateId, userId);
         candidateService.incrementVotes(candidateId);
-        return getById(votingId);
+        return VotingMapper.toDto(voting);
     }
 }

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CandidateService {
-    Long create(CandidateDTO candidate);
+    CandidateDTO create(CandidateDTO candidate);
     Optional<CandidateDTO> getById(Long id);
     void incrementVotes(Long id);
     void decrementVotes(Long id);

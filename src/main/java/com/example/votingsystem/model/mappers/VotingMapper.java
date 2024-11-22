@@ -4,10 +4,12 @@ import com.example.votingsystem.model.VotingDTO;
 import com.example.votingsystem.model.entities.Candidate;
 import com.example.votingsystem.model.entities.Vote;
 import com.example.votingsystem.model.entities.Voting;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class VotingMapper {
 
     public static VotingDTO toDto(Voting voting) {

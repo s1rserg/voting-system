@@ -29,7 +29,7 @@ public class VotingController {
     @GetMapping
     public ResponseEntity<?> getAllVotings(
             @RequestParam(required = false) String title,
-            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         List<VotingDTO> votings = votingService.getAll(title, page, size);
