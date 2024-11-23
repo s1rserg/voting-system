@@ -1,7 +1,8 @@
 package com.example.votingsystem.controller;
 
-import com.example.votingsystem.model.Vote;
+import com.example.votingsystem.model.Candidate;
 import com.example.votingsystem.model.Voting;
+import com.example.votingsystem.service.CandidateService;
 import com.example.votingsystem.service.VoteService;
 import com.example.votingsystem.service.VotingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +19,13 @@ public class VotingController {
 
     private VotingService votingService;
     private VoteService voteService;
+    private CandidateService candidateService;
 
     @Autowired
-    public void setVotingService(VotingService votingService, VoteService voteService) {
+    public void setVotingService(VotingService votingService, VoteService voteService, CandidateService candidateService) {
         this.votingService = votingService;
         this.voteService = voteService;
+        this.candidateService = candidateService;
     }
 
     // Retrieve all votings with optional filtering and pagination
@@ -126,8 +129,8 @@ public class VotingController {
     @GetMapping("/{id}/votes")
     public ResponseEntity<?> getVotingResults(@PathVariable Long id) {
         try {
-            List<Vote> votes = voteService.getByVotingId(id);
-            return ResponseEntity.ok(votes);
+            List<Candidate> candidates = candidateService.getByVotingId(id);
+            return ResponseEntity.ok(candidates);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
