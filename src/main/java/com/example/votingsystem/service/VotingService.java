@@ -1,16 +1,16 @@
 package com.example.votingsystem.service;
 
-import com.example.votingsystem.model.Candidate;
-import com.example.votingsystem.model.Voting;
+import com.example.votingsystem.model.CandidateDTO;
+import com.example.votingsystem.model.VotingDTO;
 
 import java.util.List;
 
 public interface VotingService {
-    Voting create(String title, String description, Long creatorUserId, List<Candidate> candidates);
-    List<Voting> getAll(String title, int page, int size);
-    Voting getById(Long id);
-    Voting updateStatus(Long id, Long userId, boolean active);
+    VotingDTO create(String title, String description, Long creatorUserId, List<CandidateDTO> candidates);
+    List<VotingDTO> getAll(String title, int page, int size);
+    VotingDTO getById(Long id);
+    VotingDTO updateStatus(Long id, Long userId, boolean active);
     boolean deleteById(Long id, Long userId);
-    Voting castVote(Long votingId, Long candidateId, Long userId);
-    Voting updateVote(Long votingId, Long candidateId, Long userId);
+    VotingDTO castVote(Long votingId, Long candidateId, Long userId);
+    VotingDTO updateVote(Long votingId, Long candidateId, Long userId);
 }
